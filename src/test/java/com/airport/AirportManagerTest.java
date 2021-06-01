@@ -138,7 +138,7 @@ public class AirportManagerTest {
     public void testListAllRegions() throws IOException {
         IAirportService manager = new AirportManagerImpl();
         Object[] expected = Files.readAllLines(Paths
-                .get(".\\regions.csv"))
+                .get("regions.csv"))
                 .toArray();
         Object[] actual = manager.listAllRegions().toArray();
         assertArrayEquals(expected, actual);
@@ -152,7 +152,7 @@ public class AirportManagerTest {
     public void testListAllNavaids() throws IOException {
         IAirportService manager = new AirportManagerImpl();
         Object[] expected = Files.readAllLines(Paths
-                .get(".\\navaids.csv"))
+                .get("navaids.csv"))
                 .toArray();
         Object[] actual = manager.listNavaids().toArray();
         assertArrayEquals(expected, actual);
@@ -176,7 +176,7 @@ public class AirportManagerTest {
     public void testListCountries() throws IOException {
         IAirportService manager = new AirportManagerImpl();
         Object[] expected = Files.readAllLines(Paths
-                .get(".\\countries.csv")).toArray();
+                .get("countries.csv")).toArray();
         Object[] actual = manager.listCountries().toArray();
         assertArrayEquals(expected, actual);
     }
