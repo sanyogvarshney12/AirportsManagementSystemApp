@@ -15,10 +15,10 @@
     <description>Airport Application Case Study</description>
     <inceptionYear>2021</inceptionYear>
     <properties>
-        <sonar.projectKey>AirportManagementApp</sonar.projectKey>
-        <sonar.organization>sanyogvarshney12</sonar.organization>
+        <sonar.projectKey>sanyogvarshney12_AirportsManagementSystemApp</sonar.projectKey>
+        <sonar.organization>sanyogvarshney12-github</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <sonar.coverage.jacoco.xmlReportPaths>../AirportManagementApp/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>../AirportsManagementSystemApp/target/site/jacoco-aggregate/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
 
     <scm>
