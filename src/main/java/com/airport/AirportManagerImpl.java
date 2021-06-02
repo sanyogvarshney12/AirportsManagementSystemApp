@@ -1,6 +1,5 @@
 package com.airport;
 
-import com.airport.constants.AirportType;
 import com.airport.dao.IAirportsDAO;
 import com.airport.dao.ICountriesDAO;
 import com.airport.dao.INavAidsDAO;
@@ -9,27 +8,14 @@ import com.airport.domain.Airport;
 import com.airport.domain.Country;
 import com.airport.domain.NavigationAid;
 import com.airport.domain.Region;
-import com.airport.exception.NoAirportsFoundForContinentException;
-import com.airport.exception.NoHeliportFoundException;
 import com.airport.functions.FilterFunctions;
-import com.airport.helper.PropertyHelper;
 import com.airport.logger.ApplicationLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.StringReader;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -44,7 +30,7 @@ public class AirportManagerImpl implements IAirportService{
 
     private static final String CLASSNAME = AirportManagerImpl.class.getName();
     private static final Logger log = LoggerFactory.getLogger(AirportManagerImpl.class);
-    private final ApplicationLogger logger = new ApplicationLogger();
+    private static final ApplicationLogger logger = new ApplicationLogger();
     private static final String METHODSTARTMSG = "***** Method Started *****";
     private static final String METHODENDMSG = "***** Method Ended *****";
     private static Random random;
@@ -58,7 +44,7 @@ public class AirportManagerImpl implements IAirportService{
         try {
             random = SecureRandom.getInstanceStrong();
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.error("No Algorithm for Random found",e);
         }
     }
 
@@ -113,7 +99,6 @@ public class AirportManagerImpl implements IAirportService{
         String methodName = "findHelipads()";
         logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
         List<Airport> helipadsList = airportsDAO.findByType("heliport");
-        helipadsList.stream().findAny().orElseThrow(NoHeliportFoundException::new);
         logger.debug(CLASSNAME, methodName, METHODENDMSG);
         return helipadsList;
     }
@@ -129,7 +114,7 @@ public class AirportManagerImpl implements IAirportService{
         List<Country> countryList = countriesDAO.findByContinent(continent);
         List<Airport> airportByContinent = new ArrayList<>();
         countryList.stream().map(s-> airportByContinent.addAll(
-            airportsDAO.findByCountry(s.getCode())));
+            airportsDAO.findByCountry(s.getCode()))).collect(Collectors.toList());
         logger.debug(CLASSNAME, methodName, METHODENDMSG);
         return airportByContinent;
     }

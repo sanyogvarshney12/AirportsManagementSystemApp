@@ -5,8 +5,6 @@ import com.airport.domain.Country;
 import com.airport.domain.NavigationAid;
 import com.airport.domain.Region;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.List;
 
 /**

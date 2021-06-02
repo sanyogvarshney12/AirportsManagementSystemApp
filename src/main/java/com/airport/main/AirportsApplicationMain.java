@@ -3,7 +3,6 @@ package com.airport.main;
 import ch.qos.logback.classic.Logger;
 import com.airport.constants.AirportType;
 import com.airport.db.AirportsInMemoryDB;
-import com.airport.logger.ApplicationLogger;
 import org.slf4j.LoggerFactory;
 
 public class AirportsApplicationMain {
