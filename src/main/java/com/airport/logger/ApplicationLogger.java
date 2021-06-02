@@ -1,6 +1,6 @@
 package com.airport.logger;
 
-import org.slf4j.Logger;
+import ch.qos.logback.classic.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
  */
 public class ApplicationLogger {
 
-    private final Logger logger = LoggerFactory.getLogger(ApplicationLogger.class);
+    private final Logger logger = (Logger) LoggerFactory.getLogger(ApplicationLogger.class);
 
     /**
      *

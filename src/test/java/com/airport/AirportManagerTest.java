@@ -1,5 +1,10 @@
 package com.airport;
 
+import com.airport.dao.IAirportsDAO;
+import com.airport.dao.ICountriesDAO;
+import com.airport.dao.INavAidsDAO;
+import com.airport.dao.IRegionDAO;
+import com.airport.domain.Airport;
 import com.airport.exception.NoAirportsFoundForContinentException;
 import com.airport.exception.NoHeliportFoundException;
 import org.junit.After;
@@ -13,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,23 +32,23 @@ import static org.junit.Assert.*;
  */
 public class AirportManagerTest {
 
-    List<String> mockAirports;
-    List<String> emptyAirports;
-    List<String> continentsList;
+    private IAirportService service;
+    private IAirportsDAO airportsDAO ;
+    private IRegionDAO regionDAO;
+    private INavAidsDAO navAidsDAO;
+    private ICountriesDAO countriesDAO;
 
 
     @Before
     public void init(){
         System.out.println("Executing before test");
-        mockAirports = new ArrayList<>();
-        emptyAirports = new ArrayList<>();
-        continentsList = Arrays.asList("AF", "AN", "AS", "EU", "NA", "OC", "SA");
-        mockAirports.add("323361,00AA,small_airport,Aero B Ranch Airport,38.704022,-101.473911,,NA,US,US-KS,Leoti,no,00AA,,,,,");
-        mockAirports.add("322658,00CN,heliport,Kitchen Creek Helibase Heliport,32.7273736,-116.4597417,3350,NA,US,US-CA,Pine Valley,no,00CN,,,,,");
-        mockAirports.add("329666,CN-0083,large_airport,Guodu Air Base,36.001741,117.63201,,AS,CN,CN-37,Xintai, Tai'an,no,,,,,,");
-        mockAirports.add("32753,ZYYY,medium_airport,Shenyang Dongta Airport,41.784401,123.496002,,AS,CN,CN-21,Dadong, Shenyang,no,ZYYY,,,,,");
-        mockAirports.add("342102,ZZZW,closed,Scandium City Heliport,69.355287,-138.93931,4,NA,CA,CA-YT,(Old) Scandium City,no,ZZZW,ZYW,YK96,,,");
-        mockAirports.add("26363,Z87,seaplane_base,Blinn Lake Seaplane Base,55.2515983581543,-162.7530059814453,50,NA,US,US-AK,Cold Bay,no,Z87,,Z87,,,");
+        airportsDAO = Mockito.mock(IAirportsDAO.class);
+        regionDAO = Mockito.mock(IRegionDAO.class);
+        countriesDAO = Mockito.mock(ICountriesDAO.class);
+        navAidsDAO= Mockito.mock(INavAidsDAO.class);
+        service = new AirportManagerImpl(airportsDAO,regionDAO,navAidsDAO,countriesDAO);
+        List<Airport> list = Mockito.mock(ArrayList.class);
+        Mockito.when(list.get(0)).thenReturn(new Airport());
     }
 
     @After
@@ -50,168 +56,54 @@ public class AirportManagerTest {
         System.out.println("Executing before test");
     }
 
-    /**
-     *
-     * @throws IOException
-     * @throws URISyntaxException
-     * @throws InterruptedException
-     */
-    @Test
-    public void testListAllAirports() throws IOException, URISyntaxException, InterruptedException {
-        IAirportService manager = new AirportManagerImpl();
-        int expected = 65563;
-        int actual = manager.listAllAirports();
-        assertEquals(expected, actual);
-    }
 
+    @Test
+    public void testListAllAirports() {
+        assertTrue(service.listAllAirports().isEmpty());
+    }
 
     @Test
     public void testFindAirportsByName() {
-        AirportManagerImpl manager = new AirportManagerImpl();
-        String actual = manager.findAirportByName("Shenyang Dongta Airport", mockAirports);
-        assertNotNull(actual);
+        assertTrue(service.findAirportByName("Shenyang Dongta Airport").isEmpty());
     }
 
     @Test
     public void testFindAirportsByCountry() {
-        AirportManagerImpl manager = new AirportManagerImpl();
-        Object[] expected = mockAirports.stream().filter(a->a.contains("US"))
-                .collect(Collectors.toList()).toArray();
-        Object[] actual = manager.findAirportByCountry("US", mockAirports).toArray();
-        assertArrayEquals(expected, actual);
-    }
-
-    @Test
-    public void testFindAirportsByType(){
-        IAirportService manager = new AirportManagerImpl();
-        Object[] expected = mockAirports.stream().filter(a->a.contains("heliport"))
-                .collect(Collectors.toList()).toArray();
-        Object[] actual = manager.findAirportByType("heliport", mockAirports).toArray();
-        assertArrayEquals(expected, actual);
-    }
-
-    /*@Test
-    public void testFindAirportsBySize() {
-        fail("Not Yet Impemented");
-    }
-
-    @Test
-    public void testFindAirportsByRunways() {
-        fail("Not Yet Impemented");
-    }*/
-
-    @Test
-    public void testFindHelipads() {
-        IAirportService manager = new AirportManagerImpl();
-        long expected = 1;
-        long actual = manager.findHelipads(mockAirports);
-        assertEquals(expected,actual);
+        assertTrue(service.findAirportByCountry("US").isEmpty());
     }
 
     @Test(expected = NoHeliportFoundException.class)
-    public void testFindHelipads_Exception() {
-        IAirportService manager = new AirportManagerImpl();
-        long expected = 100;
-        long actual = manager.findHelipads(emptyAirports);
+    public void testFindHelipads() {
+        assertTrue(service.findHelipads().isEmpty());
     }
 
     @Test
     public void testFindAirportsByContinent() {
-        IAirportService manager = new AirportManagerImpl();
-        Object[] expected = mockAirports.stream().filter(s->s.contains("NA")).toArray();
-        Object[] actual = manager.findAirportsByContinent("NA", mockAirports).toArray();
-        assertArrayEquals(expected, actual);
+        assertTrue(service.findAirportsByContinent("NA").isEmpty());
     }
 
-    @Test(expected = NoAirportsFoundForContinentException.class)
-    public void testFindAirportsByContinent_Exception() {
-        IAirportService manager = new AirportManagerImpl();
-        Object[] expected = mockAirports.stream().filter(s->s.contains("AF")).toArray();
-        Object[] actual = manager.findAirportsByContinent("AF", mockAirports).toArray();
-    }
-
-    /**
-     *
-     * @throws IOException
-     */
     @Test
-    public void testListAllRegions() throws IOException {
-        IAirportService manager = new AirportManagerImpl();
-        Object[] expected = Files.readAllLines(Paths
-                .get("regions.csv"))
-                .toArray();
-        Object[] actual = manager.listAllRegions().toArray();
-        assertArrayEquals(expected, actual);
+    public void testListAllRegions(){
+        assertTrue(service.listAllRegions().isEmpty());
     }
 
-    /**
-     *
-     * @throws IOException
-     */
     @Test
     public void testListAllNavaids() throws IOException {
-        IAirportService manager = new AirportManagerImpl();
-        Object[] expected = Files.readAllLines(Paths
-                .get("navaids.csv"))
-                .toArray();
-        Object[] actual = manager.listNavaids().toArray();
-        assertArrayEquals(expected, actual);
-    }
-
-    /*@Test
-    public void testListAll() {
-        fail("Not Yet Impemented");
+        assertTrue(service.listNavaids().isEmpty());
     }
 
     @Test
     public void testGetRandomAirport() {
-        fail("Not Yet Impemented");
-    }*/
-
-    /**
-     *
-     * @throws IOException
-     */
-    @Test
-    public void testListCountries() throws IOException {
-        IAirportService manager = new AirportManagerImpl();
-        Object[] expected = Files.readAllLines(Paths
-                .get("countries.csv")).toArray();
-        Object[] actual = manager.listCountries().toArray();
-        assertArrayEquals(expected, actual);
+        assertNotNull(service.randomAirport());
     }
 
-    /**
-     *
-     * @throws IOException
-     */
     @Test
-    public void testListContinents() throws IOException {
-        IAirportService manage = new AirportManagerImpl();
-        Object[] expected = continentsList.toArray();
-        Object[] actual = manage.listContinents().toArray();
-        assertArrayEquals(expected, actual);
-    }
-
-    /*@Test
-    public void testLogin() {
-        fail("Not Yet Impemented");
+    public void testListCountries(){
+        assertTrue(service.listCountries().isEmpty());
     }
 
     @Test
-    public void testSignup() {
-        fail("Not Yet Impemented");
+    public void testListContinents() throws IOException {
+        assertTrue(service.listContinents().isEmpty());
     }
-
-    public void testHelp(){
-        fail("Not Yet Impemented");
-    }
-
-    public void listAirportsSorted(){
-        fail("Not Yet Impemented");
-    }
-
-    public void listAirportsPaginated(){
-        fail("Not Yet Impemented");
-    }*/
 }

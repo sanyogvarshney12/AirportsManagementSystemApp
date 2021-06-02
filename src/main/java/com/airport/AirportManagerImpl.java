@@ -1,8 +1,17 @@
 package com.airport;
 
 import com.airport.constants.AirportType;
+import com.airport.dao.IAirportsDAO;
+import com.airport.dao.ICountriesDAO;
+import com.airport.dao.INavAidsDAO;
+import com.airport.dao.IRegionDAO;
+import com.airport.domain.Airport;
+import com.airport.domain.Country;
+import com.airport.domain.NavigationAid;
+import com.airport.domain.Region;
 import com.airport.exception.NoAirportsFoundForContinentException;
 import com.airport.exception.NoHeliportFoundException;
+import com.airport.functions.FilterFunctions;
 import com.airport.helper.PropertyHelper;
 import com.airport.logger.ApplicationLogger;
 import org.slf4j.Logger;
@@ -40,6 +49,11 @@ public class AirportManagerImpl implements IAirportService{
     private static final String METHODENDMSG = "***** Method Ended *****";
     private static Random random;
 
+    private IAirportsDAO airportsDAO;
+    private IRegionDAO regionDAO;
+    private INavAidsDAO navAidsDAO;
+    private ICountriesDAO countriesDAO;
+
     static {
         try {
             random = SecureRandom.getInstanceStrong();
@@ -48,100 +62,74 @@ public class AirportManagerImpl implements IAirportService{
         }
     }
 
+    public AirportManagerImpl(IAirportsDAO airportsDAO, IRegionDAO regionDAO, INavAidsDAO navAidsDAO, ICountriesDAO countriesDAO) {
+        this.airportsDAO = airportsDAO;
+        this.regionDAO = regionDAO;
+        this.navAidsDAO = navAidsDAO;
+        this.countriesDAO = countriesDAO;
+
+    }
     /**
      *
-     * @return int
-     * @throws IOException
-     * @throws URISyntaxException
-     * @throws InterruptedException
+     * @return List<Airport>
      */
-    public int listAllAirports() throws IOException, URISyntaxException, InterruptedException {
+    public List<Airport> listAllAirports() {
         String methodName = "listAllAirports()";
         log.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        int totalAirports = readAirportData().size();
-        logger.debug(CLASSNAME, methodName, "For people who fly: {} and counting...", totalAirports);
+        logger.debug(CLASSNAME, methodName, "For people who fly: {} and counting...", airportsDAO.findAll().size());
         logger.debug(CLASSNAME, methodName, METHODENDMSG);
-        return totalAirports;
+        return airportsDAO.findAll();
     }
 
     /**
      *
      * @param name
-     * @param airports
      * @return String
      */
-    public String findAirportByName(String name, List<String> airports) {
+    public List<Airport> findAirportByName(String name) {
         String methodName = "findAirportByName()";
         logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        List<String> airportByName = getListByFunction(airports, name);
-        logger.debug(CLASSNAME, methodName, "Airport Details by Name : {}", airportByName.get(0));
+        List<Airport> airportByName = airportsDAO.findByName(name);
         logger.debug(CLASSNAME, methodName, METHODENDMSG);
-        return airportByName.get(0);
+        return airportByName;
     }
 
     /**
      *
      * @param country
-     * @param airports
      * @return List
      */
-    public List<String> findAirportByCountry(String country, List<String> airports) {
+    public List<Airport> findAirportByCountry(String country) {
         String methodName = "findAirportByCountry()";
         logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        List<String> airportByCountry = getListByFunction(airports, country);
-        logger.debug(CLASSNAME, methodName, "Airport Details by Country : {}", airportByCountry);
-        logger.debug(CLASSNAME, methodName, METHODENDMSG);
-        return airportByCountry;
+        return airportsDAO.findByCountry(country);
     }
 
-    /**
-     *
-     * @param type
-     * @param airports
-     * @return List
-     */
-    public List<String> findAirportByType(String type, List<String> airports) {
-        String methodName = "findAirportByType()";
-        logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        List<String> airportByType = getListByFunction(airports, type);
-        logger.debug(CLASSNAME, methodName, "Airport Details by Type : {}", airportByType);
-        logger.debug(CLASSNAME, methodName, METHODENDMSG);
-        return airportByType;
-    }
 
     /**
-     *
-     * @param airports
-     * @return long
+     * @return List<Airport>
      */
-    public long findHelipads(List<String> airports) {
+    public List<Airport> findHelipads() {
         String methodName = "findHelipads()";
         logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        List<String> helipadsList = airports.stream().filter(AirportManagerImpl::heliport)
-                .collect(Collectors.toList());
-        if(helipadsList.isEmpty()){
-            throw new NoHeliportFoundException("No Heliports found in the system.");
-        }
-        long size = helipadsList.size();
-        logger.debug(CLASSNAME, methodName, "Number of Heliports found : {}", size);
+        List<Airport> helipadsList = airportsDAO.findByType("heliport");
+        helipadsList.stream().findAny().orElseThrow(NoHeliportFoundException::new);
         logger.debug(CLASSNAME, methodName, METHODENDMSG);
-        return size;
+        return helipadsList;
     }
 
     /**
      *
      * @param continent
-     * @param airports
      * @return List
      */
-    public List<String> findAirportsByContinent(String continent, List<String> airports) {
+    public List<Airport> findAirportsByContinent(String continent) {
         String methodName = "findAirportsByContinent()";
         logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        List<String> airportByContinent = getListByFunction(airports, continent);
-        if(airportByContinent.isEmpty()){
-            throw new NoAirportsFoundForContinentException("No Airport found for this Continent");
-        }
-        logger.debug(CLASSNAME, methodName, "Airport Details by Continents : {}", airportByContinent);
+        List<Country> countryList = countriesDAO.findByContinent(continent);
+        List<Airport> airportByContinent = new ArrayList<>();
+        countryList.stream().map(s-> airportByContinent.addAll(
+            airportsDAO.findByCountry(s.getCode())));
         logger.debug(CLASSNAME, methodName, METHODENDMSG);
         return airportByContinent;
     }
@@ -152,15 +140,13 @@ public class AirportManagerImpl implements IAirportService{
      * @throws IOException
      */
     @Override
-    public List<String> listContinents() throws IOException {
+    public List<String> listContinents(){
         String methodName = "listContinents()";
         logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        List<String> countriesList = Files.readString(Paths
-                .get(PropertyHelper.getProperty("COUNTRIES_CSV_LOCATION")))
-                .lines().collect(Collectors.toList());
-        countriesList.remove(0);
-        List<String> continentList = countriesList.stream().map(AirportManagerImpl::splitContinents).distinct().sorted().collect(Collectors.toList());
-        logger.debug(CLASSNAME, methodName, "Total Continents : {}", continentList.size());
+        List<Country> countriesList = countriesDAO.findAll().stream().filter(FilterFunctions
+                .distinctByKey(s->s.getContinent())).collect(Collectors.toList());
+        List<String> continentList = countriesList.stream().map(s->s.getContinent())
+                .collect(Collectors.toList());
         logger.debug(CLASSNAME, methodName, METHODENDMSG);
         return continentList;
     }
@@ -168,110 +154,38 @@ public class AirportManagerImpl implements IAirportService{
     /**
      *
      * @return List
-     * @throws IOException
      */
     @Override
-    public List<String> listCountries() throws IOException {
+    public List<Country> listCountries() {
         String methodName = "listCountries()";
         logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        List<String> countriesList = Files.readString(Paths
-                .get(PropertyHelper.getProperty("COUNTRIES_CSV_LOCATION")))
-                .lines().collect(Collectors.toList());
-        logger.debug(CLASSNAME, methodName, "Total Countries : {}", countriesList.size());
-        logger.debug(CLASSNAME, methodName, METHODENDMSG);
-        return countriesList;
+        return countriesDAO.findAll();
     }
 
     /**
      *
      * @return List
-     * @throws IOException
      */
-    public List<String> listAllRegions() throws IOException {
+    public List<Region> listAllRegions() {
         String methodName = "listAllRegions()";
         logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        List<String> regionList = Files.readString(Paths
-                .get(PropertyHelper.getProperty("REGION_CSV_LOCATION")))
-                .lines().collect(Collectors.toList());
-        logger.debug(CLASSNAME, methodName, "Total Regions : {}", regionList.size());
-        logger.debug(CLASSNAME, methodName, METHODENDMSG);
-        return regionList;
+        return regionDAO.findAll();
     }
 
     /**
      *
      * @return List
-     * @throws IOException
      */
     @Override
-    public List<String> listNavaids() throws IOException {
+    public List<NavigationAid> listNavaids() {
         String methodName = "listNavaids()";
         logger.debug(CLASSNAME, methodName, METHODSTARTMSG);
-        List<String> navaidsList = Files.readString(Paths
-                .get(PropertyHelper.getProperty("NAVAIDS_CSV_LOCATION")))
-                .lines().collect(Collectors.toList());
-        logger.debug(CLASSNAME, methodName, "Total Navigation Aids : {}", navaidsList.size());
-        logger.debug(CLASSNAME, methodName, METHODENDMSG);
-        return navaidsList;
+        return navAidsDAO.findAll();
     }
 
     @Override
-    public String randomAirport(List<String> airports) {
-        int n = random.nextInt(airports.size());
-        return airports.get(n);
-    }
-
-    /**
-     *
-     * @param airport
-     * @return boolean
-     */
-    public static boolean heliport(String airport){
-        return airport.contains(AirportType.HELIPORT.getValue());
-    }
-
-    /**
-     *
-     * @param s
-     * @return String
-     */
-    public static String splitContinents(String s){
-        String[] arr = s.split(",");
-        return arr[3].replace("\"", "");
-    }
-
-    /**
-     *
-     * @param airports
-     * @param function
-     * @return List
-     */
-    public List<String> getListByFunction(List<String> airports, String function) {
-        return airports.stream().filter(airport->airport.contains(function))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     *
-     * @return List
-     * @throws IOException
-     * @throws URISyntaxException
-     * @throws InterruptedException
-     */
-    public static List<String> readAirportData() throws IOException, URISyntaxException, InterruptedException {
-        HttpRequest request = HttpRequest.newBuilder(new URI(PropertyHelper.getProperty("AIRPORTS_CSV_LOCATION")))
-                .GET()
-                .timeout(Duration.ofMinutes(1))
-                .build();
-        HttpResponse<String> response = HttpClient.newHttpClient()
-                .send(request, HttpResponse.BodyHandlers.ofString());
-
-        BufferedReader reader = new BufferedReader(new StringReader(response.body()));
-        String line = "";
-        List<String> airports = new ArrayList<>();
-        while((line = reader.readLine()) != null){
-            airports.add(line.replace("\"", ""));
-        }
-        return airports;
+    public Airport randomAirport() {
+        List<Airport> list = airportsDAO.findAll();
+        return list.size() !=0 ? list.get(random.nextInt(list.size())) : new Airport();
     }
 }

@@ -1,13 +1,13 @@
 package com.airport.main;
 
+import ch.qos.logback.classic.Logger;
 import com.airport.constants.AirportType;
 import com.airport.db.AirportsInMemoryDB;
-import org.slf4j.Logger;
+import com.airport.logger.ApplicationLogger;
 import org.slf4j.LoggerFactory;
 
 public class AirportsApplicationMain {
-    private static final Logger logger = LoggerFactory.getLogger(AirportsApplicationMain.class);
-
+    private static final Logger logger = (Logger) LoggerFactory.getLogger(AirportsApplicationMain.class);
     public static void main(String[] args) {
         AirportsInMemoryDB.airports();
         if (logger.isInfoEnabled())

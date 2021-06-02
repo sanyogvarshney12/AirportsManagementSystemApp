@@ -1,5 +1,10 @@
 package com.airport;
 
+import com.airport.domain.Airport;
+import com.airport.domain.Country;
+import com.airport.domain.NavigationAid;
+import com.airport.domain.Region;
+
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -11,16 +16,15 @@ import java.util.List;
  */
 public interface IAirportService {
 
-    public int listAllAirports() throws IOException, URISyntaxException, InterruptedException;
-    public String findAirportByName(String name, List<String> airports);
-    public List<String> findAirportByCountry(String country, List<String> airports);
-    public List<String> findAirportByType(String type, List<String> airports);
-    public long findHelipads(List<String> airports);
-    public List<String> findAirportsByContinent(String continent, List<String> airports);
-    public List<String> listContinents() throws IOException;
-    public List<String> listCountries() throws IOException;
-    public List<String> listAllRegions() throws IOException;
-    public List<String> listNavaids() throws IOException;
-    public String randomAirport(List<String> airports);
+    public List<Airport> listAllAirports();
+    public List<Airport> findAirportByName(String name);
+    public List<Airport> findAirportByCountry(String country);
+    public List<Airport> findHelipads();
+    public List<Airport> findAirportsByContinent(String continent);
+    public List<String> listContinents();
+    public List<Country> listCountries();
+    public List<Region> listAllRegions();
+    public List<NavigationAid> listNavaids();
+    public Airport randomAirport();
 
 }

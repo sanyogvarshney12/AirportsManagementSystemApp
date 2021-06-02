@@ -6,8 +6,4 @@ package com.airport.exception;
  * @version 1.0
  */
 public class NoAirportsFoundForContinentException extends RuntimeException {
-
-    public NoAirportsFoundForContinentException(String msg) {
-        super(msg);
-    }
 }

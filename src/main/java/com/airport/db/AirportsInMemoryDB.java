@@ -56,12 +56,8 @@ public class AirportsInMemoryDB {
      * @return
      */
     private static Airport airport = new Airport();
-    public synchronized static List<Airport> airports() {
-        try {
-            airport.wait();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+
+    public static List<Airport> airports() {
         return airportsDB;
     }
 
@@ -70,6 +66,7 @@ public class AirportsInMemoryDB {
      * @return
      */
     public static List<NavigationAid> navaids() {
+
         return naviaidsDB;
     }
 
@@ -78,6 +75,7 @@ public class AirportsInMemoryDB {
      * @return
      */
     public static List<Country> countries() {
+
         return countriesDB;
     }
 
@@ -86,6 +84,7 @@ public class AirportsInMemoryDB {
      * @return
      */
     public static List<Region> regions() {
+
         return regionsDB;
     }
 }

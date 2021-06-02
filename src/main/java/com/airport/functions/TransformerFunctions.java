@@ -33,8 +33,6 @@ public class TransformerFunctions {
             airportObject.setLatitude(Double.parseDouble(datas[4].replace("\"", "")));
             airportObject.setLongitude(Double.parseDouble(datas[5].replace("\"", "")));
             airportObject.setCountryName(datas[10].replace("\"", ""));
-            airportObject.setRegionName(datas[12].replace("\"", ""));
-            airportObject.setMunicipality(datas[13].replace("\"", ""));
         }
         return airportObject;
     }
