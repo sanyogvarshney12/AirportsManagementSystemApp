@@ -72,7 +72,7 @@ public class AirportManagerTest {
         assertTrue(service.findAirportByCountry("US").isEmpty());
     }
 
-    @Test(expected = NoHeliportFoundException.class)
+    @Test
     public void testFindHelipads() {
         assertTrue(service.findHelipads().isEmpty());
     }
